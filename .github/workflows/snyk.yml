@@ -1,4 +1,4 @@
-name: 🚁 Snyk SAST + Dependency Scan
+name: 🛡️ Snyk Java Scan (Gradle)
 
 on:
   push:
@@ -9,39 +9,31 @@ on:
 jobs:
   snyk:
     runs-on: ubuntu-latest
-    name: Run Snyk Scan
+    name: Run Snyk Scan on Gradle Project
 
     steps:
-      - name: 💾 Checkout code
+      - name: 📥 Checkout Code
         uses: actions/checkout@v3
 
-      - name: 🔧 Set up Node.js (or Java, Python, etc.)
-        uses: actions/setup-node@v3
+      - name: ☕ Set up Java
+        uses: actions/setup-java@v3
         with:
-          node-version: '16'
+          distribution: 'temurin' # or 'zulu', 'adopt'
+          java-version: '17'      # change if you're using Java 11 or another version
 
-      - name: 🔒 Run Snyk to test vulnerabilities
-        uses: snyk/actions/node@master
+      - name: 🧱 Build Gradle Project
+        run: ./gradlew build -x test
+
+      - name: 🔍 Install Snyk CLI
+        run: npm install -g snyk
+
+      - name: 🧪 Run Snyk Test & Save Report
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: test --json > snyk-report.json
+        run: snyk test --json > snyk-report.json
 
-      - name: 📊 Upload scan result artifact
+      - name: 📦 Upload Snyk Report
         uses: actions/upload-artifact@v3
         with:
           name: snyk-report
           path: snyk-report.json
-
-      - name: 📧 Email scan report (via SendGrid or Mailgun)
-        if: always()
-        run: |
-          echo "Snyk scan completed. Sending report via email..."
-          # You can replace this curl call with SendGrid/Mailgun APIs for free email services
-          curl -X POST https://api.mailgun.net/v3/YOUR_DOMAIN/messages \
-          -u 'api:YOUR_API_KEY' \
-          -F from='Scan Bot <scan@YOUR_DOMAIN>' \
-          -F to=youremail@example.com \
-          -F subject='Snyk Scan Report' \
-          -F text='Scan completed. See attached report.' \
-          -F attachment=@snyk-report.json
