@@ -1,0 +1,47 @@
+name: 🚁 Snyk SAST + Dependency Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  snyk:
+    runs-on: ubuntu-latest
+    name: Run Snyk Scan
+
+    steps:
+      - name: 💾 Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🔧 Set up Node.js (or Java, Python, etc.)
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: 🔒 Run Snyk to test vulnerabilities
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: test --json > snyk-report.json
+
+      - name: 📊 Upload scan result artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: snyk-report
+          path: snyk-report.json
+
+      - name: 📧 Email scan report (via SendGrid or Mailgun)
+        if: always()
+        run: |
+          echo "Snyk scan completed. Sending report via email..."
+          # You can replace this curl call with SendGrid/Mailgun APIs for free email services
+          curl -X POST https://api.mailgun.net/v3/YOUR_DOMAIN/messages \
+          -u 'api:YOUR_API_KEY' \
+          -F from='Scan Bot <scan@YOUR_DOMAIN>' \
+          -F to=youremail@example.com \
+          -F subject='Snyk Scan Report' \
+          -F text='Scan completed. See attached report.' \
+          -F attachment=@snyk-report.json
