@@ -33,7 +33,7 @@ jobs:
         run: snyk test --json > snyk-report.json
 
       - name: 📦 Upload Snyk Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3.1.3
         with:
           name: snyk-report
           path: snyk-report.json
