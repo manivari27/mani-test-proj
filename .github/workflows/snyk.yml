@@ -22,7 +22,7 @@ jobs:
           java-version: '17'      # change if you're using Java 11 or another version
 
       - name: 🧱 Build Gradle Project
-        run: ./gradlew build -x test
+        run: chmod +x ./gradlew./gradlew build -x test
 
       - name: 🔍 Install Snyk CLI
         run: npm install -g snyk
